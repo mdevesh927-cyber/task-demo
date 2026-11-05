@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Tracker & GitHub Guide</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --accent-color: #4a90e2;
+            --border-color: #e0e0e0;
+            --danger-color: #e74c3c;
+            --success-color: #2ecc71;
+        }
+
+        body.dark-mode {
+            --bg-color: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text-color: #f4f7f6;
+            --border-color: #444444;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"], select {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .filter-btn {
+            background-color: transparent;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .filter-btn.active {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        li.completed span {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        .tag {
+            font-size: 0.8em;
+            padding: 3px 8px;
+            border-radius: 12px;
+            background-color: var(--accent-color);
+            color: white;
+            margin-left: 10px;
+        }
+
+        .delete-btn {
+            background-color: var(--danger-color);
+            padding: 5px 10px;
+            font-size: 0.8em;
+        }
+
+        .guide pre {
+            background-color: rgba(0,0,0,0.05);
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Task Tracker & Learning Hub</h1>
+            <button id="themeToggle">🌙 Toggle Dark Mode</button>
+        </header>
+
+        <div class="card">
+            <h2>Add New Task</h2>
+            <div class="input-group">
+                <input type="text" id="taskInput" placeholder="Enter task details...">
+                <select id="categorySelect">
+                    <option value="Git Step">Git Step</option>
+                    <option value="Personal">Personal</option>
+                    <option value="Work">Work</option>
+                </select>
+                <button id="addTaskBtn">Add Task</button>
+            </div>
+
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="active">Active</button>
+                <button class="filter-btn" data-filter="completed">Completed</button>
+            </div>
+
+            <ul id="taskList"></ul>
+        </div>
+
+        <div class="card guide">
+            <h2>🚀 GitHub Deployment Guide</h2>
+            <p>Follow these standard terminal commands to deploy this project to GitHub:</p>
+            <pre><code># 1. Initialize git repository
+git init
+
+# 2. Add files and commit
+git add .
+git commit -m "feat: initial task tracker application setup"
+
+# 3. Create branch & connect remote repository
+git branch -M main
+git remote add origin https://github.com/YOUR_USERNAME/task-tracker.git
+
+# 4. Push code to GitHub
+git push -u origin main</code></pre>
+            <p><strong>To activate GitHub Pages:</strong> Go to Repository Settings -> Pages -> Source: select <code>main</code> branch -> Save.</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const taskInput = document.getElementById('taskInput');
+            const categorySelect = document.getElementById('categorySelect');
+            const addTaskBtn = document.getElementById('addTaskBtn');
+            const taskList = document.getElementById('taskList');
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            const themeToggle = document.getElementById('themeToggle');
+
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || [
+                { id: 1, text: 'Initialize local Git repository', category: 'Git Step', completed: false },
+                { id: 2, text: 'Commit index.html to main branch', category: 'Git Step', completed: false },
+                { id: 3, text: 'Enable GitHub Pages in repo settings', category: 'Git Step', completed: false }
+            ];
+
+            let currentFilter = 'all';
+
+            function saveTasks() {
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+            }
+
+            function renderTasks() {
+                taskList.innerHTML = '';
+                const filteredTasks = tasks.filter(task => {
+                    if (currentFilter === 'active') return !task.completed;
+                    if (currentFilter === 'completed') return task.completed;
+                    return true;
+                });
+
+                filteredTasks.forEach(task => {
+                    const li = document.createElement('li');
+                    if (task.completed) li.classList.add('completed');
+
+                    li.innerHTML = `
+                        <div>
+                            <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${task.id})">
+                            <span>${task.text}</span>
+                            <span class="tag">${task.category}</span>
+                        </div>
+                        <button class="delete-btn" onclick="deleteTask(${task.id})">Delete</button>
+                    `;
+                    taskList.appendChild(li);
+                });
+            }
+
+            window.toggleTask = (id) => {
+                tasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+                saveTasks();
+                renderTasks();
+            };
+
+            window.deleteTask = (id) => {
+                tasks = tasks.filter(t => t.id !== id);
+                saveTasks();
+                renderTasks();
+            };
+
+            addTaskBtn.addEventListener('click', () => {
+                const text = taskInput.value.trim();
+                if (text) {
+                    tasks.push({
+                        id: Date.now(),
+                        text,
+                        category: categorySelect.value,
+                        completed: false
+                    });
+                    taskInput.value = '';
+                    saveTasks();
+                    renderTasks();
+                }
+            });
+
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentFilter = e.target.dataset.filter;
+                    renderTasks();
+                });
+            });
+
+            themeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+            });
+
+            renderTasks();
+        });
+    </script>
+</body>
+</html>
